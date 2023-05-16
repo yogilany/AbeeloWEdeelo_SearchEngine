@@ -3,6 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/AbeeloWEdeelo_SearchEngine.iml" filepath="$PROJECT_DIR$/AbeeloWEdeelo_SearchEngine.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Indexer/Indexer.iml" filepath="$PROJECT_DIR$/Indexer/Indexer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/MongoDb/MongoDb.iml" filepath="$PROJECT_DIR$/MongoDb/MongoDb.iml" />
     </modules>
   </component>
 </project>
