@@ -48,7 +48,7 @@ public class QuerySearch {
         System.out.println("Query is: " + Query);
 
         prepareStopWords();
-        words = db.getCollection("words");
+        words = db.getCollection("tempWords");
         String wordAfterStemming = stemming(Query);
         System.out.println("wordAfterStemming is: " + wordAfterStemming);
 
@@ -68,16 +68,6 @@ public class QuerySearch {
             res.urls = (Object[]) array;
             res.idf = idf;
             return res;
-
-
-
-
-
-
-
-
-
-
 
         }
 
