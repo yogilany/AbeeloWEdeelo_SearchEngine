@@ -26,7 +26,6 @@ public class SearchController {
         MongoClient client = MongoClients.create("mongodb+srv://yogilany:7kkmGoukZJIOVIyK@abeelowedeelo.vduhnjn.mongodb.net/?retryWrites=true&w=majority");
         MongoDatabase db = client.getDatabase("Dev");
 
-
         return QuerySearch.Search(search, db);
     }
 

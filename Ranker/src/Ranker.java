@@ -1,3 +1,4 @@
+package Ranker;
 import javax.swing.text.Document;
 import java.util.*;
 
@@ -21,15 +22,15 @@ public class Ranker {
         Document[] docs = new Document[words.length];
 
         HashMap<String, word_info> resultmap = new HashMap<>();
-        for (Document doc: docs){
-            word_info info = new word_info();
-            info.word = doc.get("word");
-            info.IDF = doc.get("IDF");
-            info.URL_data = new HashMap<>();
-            for (String url: doc.get("URLs")){
-                info.URL_data.put(url, doc.get("TF"));
-            }
-            resultmap.put(info.word, info);
+        for (Document doc : docs) {
+//            word_info info = new word_info();
+//            info.word = doc.get("word");
+//            info.IDF = doc.get("IDF");
+//            info.URL_data = new HashMap<>();
+//            for (String url : doc.get("URLs")) {
+//                info.URL_data.put(url, doc.get("TF"));
+//            }
+//            resultmap.put(info.word, info);
         }
 
         return resultmap;
@@ -87,11 +88,11 @@ public class Ranker {
                 }
             }
             double norm_document = 0;
-            for(double val : documents_vector.get(doc).values()) {
+            for (double val : documents_vector.get(doc).values()) {
                 norm_document += val * val;
             }
             double norm_query = 0;
-            for(double val : query_vector.values()) {
+            for (double val : query_vector.values()) {
                 norm_query += val * val;
             }
             double norm_sqrt = Math.sqrt(norm_document * norm_query);

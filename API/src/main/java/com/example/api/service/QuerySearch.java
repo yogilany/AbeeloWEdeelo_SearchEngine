@@ -8,6 +8,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
@@ -20,7 +23,7 @@ public class QuerySearch {
 
     // create an object for the result to be returned
     public static class Result {
-        public Object[] urls;
+        public List<Object> urls;
         public double idf;
 
         public Result() {
@@ -45,11 +48,25 @@ public class QuerySearch {
 
     public static Result Search(String Query, MongoDatabase db) throws IOException {
         System.out.println("Entered the query processor");
-        System.out.println("Query is: " + Query);
+        String [] queryWords = Query.split(" ");
+        Result res = new Result();
+        res.urls = new ArrayList<>();
+
+        // initilize and array of urls
+
+
+
+
+        for(String w : queryWords){
+
+
+
+
+        System.out.println("Query is: " + w);
 
         prepareStopWords();
         words = db.getCollection("tempWords");
-        String wordAfterStemming = stemming(Query);
+        String wordAfterStemming = stemming(w);
         System.out.println("wordAfterStemming is: " + wordAfterStemming);
 
         // get the word in the query form words collection
@@ -63,16 +80,25 @@ public class QuerySearch {
             // get the IDF from the result
             double idf = (double) result.get("IDF");
 
+            res.urls.addAll(List.of(array));
+
             // return the array of urls and the idf
-            Result res = new Result();
-            res.urls = (Object[]) array;
-            res.idf = idf;
-            return res;
+//            Result res = new Result();
+            // add the new urls to the array
+
+
+
+
+
 
         }
+        }
+res.idf = 0;
+        return res;
 
 
-        return null;
+
+//        return null;
     }
 
     public static void prepareStopWords() throws IOException {

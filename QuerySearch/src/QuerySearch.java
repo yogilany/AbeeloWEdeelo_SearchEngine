@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.HashSet;
 import static com.mongodb.client.model.Filters.eq;
 
-import static java.util.Collections.eq;
+//import static java.util.Collections.eq;
 
 public class QuerySearch {
     public static MongoCollection<org.bson.Document> words;

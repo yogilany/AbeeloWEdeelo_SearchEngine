@@ -44,7 +44,7 @@ public class Indexer implements Runnable {
     public static void main(String[] args, MongoDatabase db) throws IOException {
         Preprocessing.prepareStopWords();
 
-        Indexer.oneURL = db.getCollection("visitedURLs");
+        Indexer.oneURL = db.getCollection("visitedURL");
         Indexer.words = db.getCollection("tempWords");
 
         // Start threads
@@ -78,15 +78,7 @@ public class Indexer implements Runnable {
 
 
         Iterator<Document> it = iterDoc.iterator();
-        // Loop on all docs in list of docs that is already crawled and index words in each doc
-        int threadIndex = Integer.parseInt(Thread.currentThread().getName());
-        int chunk = ((toBeCrawledDocs.size()) / numThreads);
-        int remainder = ((toBeCrawledDocs.size()) % numThreads);
-        int start = threadIndex * chunk;
-        int end = start + chunk;
-        if (threadIndex == numThreads - 1) {
-            end += remainder;
-        }
+
         org.jsoup.nodes.Document doc = null;
 
         // get the length of the oneURL collection
