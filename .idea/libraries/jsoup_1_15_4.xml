@@ -1,10 +1,7 @@
 <component name="libraryTable">
   <library name="jsoup-1.15.4">
     <CLASSES>
-      <root url="jar://$USER_HOME$/Downloads/jsoup-1.15.4.jar!/" />
-      <root url="jar://$USER_HOME$/Downloads/mongo-java-driver-3.12.10.jar!/" />
-      <root url="jar://$USER_HOME$/Downloads/opennlp-tools-1.8.0.jar!/" />
-      <root url="jar://$USER_HOME$/Downloads/snowball-stemmer-1.3.0.581.1.jar!/" />
+      <root url="jar://$USER_HOME$/Downloads/drive-download-20230517T185203Z-001/jsoup-1.15.4.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

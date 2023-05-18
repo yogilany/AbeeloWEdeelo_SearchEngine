@@ -16,34 +16,77 @@ import org.jsoup.nodes.Element;
 
 //import javax.lang.model.element.Element;
 
-public class Indexer {
+public class Indexer implements Runnable {
+    // Number of threads
+    static int numThreads = 10;
+    // Finished Threads
+    static int numThreadsFinished = 0;
+    // Mutex to lock with it
+    static Object lock = new Object();
 
     private static double DOCUMENTS_COUNT = 0;
     public static MongoCollection<org.bson.Document> oneURL;
     public static MongoCollection<org.bson.Document> words;
     public static HashMap<String, Pair<Integer,Integer>> URL_Frequency = new HashMap<String, Pair<Integer,Integer>>();
-    static HashMap<String, Integer> stopWords;
     public static HashMap<String, HashMap<String, URL_DATA<Integer,Integer, String, String>>> invertedFile = new HashMap<String, HashMap<String, URL_DATA<Integer,Integer, String, String>>>();
-    private static MongoCollection<Document> URLFrequencies;
+
+    // Run function to be executed by each thread
+    public void run() {
+        try {
+            index();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        synchronized (lock) {
+            numThreadsFinished++;
+        }
+    }
     public static void main(String[] args, MongoDatabase db) throws IOException {
         Preprocessing.prepareStopWords();
-        Indexer.oneURL = db.getCollection("oneURL");
+
+        Indexer.oneURL = db.getCollection("visitedURLs");
         Indexer.words = db.getCollection("tempWords");
-        index();
-        // print the inverted file
+
+        // Start threads
+        Thread[] threads = new Thread[numThreads];
+        for (int i = 0; i < numThreads; i++) {
+            threads[i] = new Thread(new Indexer());
+            threads[i].setName(String.valueOf(i));
+            threads[i].start();
+        }
+
+        // Wait for all threads to finish their work
+        for (int i = 0; i < numThreads; i++) {
+            try {
+                threads[i].join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+//        index();
 
         AddToDatabase();
 
-//        // print the URL_Frequency hashmap
-//        for (Map.Entry<String, Pair<Integer,Integer>> entry : URL_Frequency.entrySet()) {
-////            System.out.println(entry.getKey() + " " + entry.getValue().getFirst() + " " + entry.getValue().getSecond());
-//        }
     }
 
     private static void index() throws IOException {
-        Bson projection = Projections.fields(Projections.include("link"), Projections.excludeId());
+
+
+        Bson projection = Projections.fields(Projections.include("url"), Projections.excludeId());
         FindIterable<Document> iterDoc = oneURL.find().projection(projection);
+
+
         Iterator<Document> it = iterDoc.iterator();
+        // Loop on all docs in list of docs that is already crawled and index words in each doc
+        int threadIndex = Integer.parseInt(Thread.currentThread().getName());
+        int chunk = ((toBeCrawledDocs.size()) / numThreads);
+        int remainder = ((toBeCrawledDocs.size()) % numThreads);
+        int start = threadIndex * chunk;
+        int end = start + chunk;
+        if (threadIndex == numThreads - 1) {
+            end += remainder;
+        }
         org.jsoup.nodes.Document doc = null;
 
         // get the length of the oneURL collection
@@ -59,13 +102,14 @@ public class Indexer {
 
             Document fileUrlObject = (Document) it.next();
             // get the text of the url and store it in a string
-            doc = getDocText(fileUrlObject.get("link") + "");
-            String pageTitle = doc.title();
-            System.out.println("Page title is: " + pageTitle);
+            doc = getDocText(fileUrlObject.get("url") + "");
+//            System.out.println("Page title is: " + pageTitle);
 
             if(doc == null){
                 continue;
             }
+            String pageTitle = doc.title();
+
 
             Elements allElements = getElements(doc);
             Integer wordCountInDoc = 0;
@@ -91,40 +135,47 @@ public class Indexer {
                         String wordAfterStemming = Preprocessing.stemming(word);
 //                        System.out.println("word is: " + word);
                         String textOfElement = null;
-                        // get the text of the first element  that contains that word
-                        // get the first paragraph that contains the word
-//                        if(tag == "p" && textOfElement != null){
-//                            textOfElement = String.valueOf(doc.select("p:contains(" + word + ")").first());
-//                        }
-                        if((tag == "p" || tag == "h1"  )&& wordAfterStemming != null){
-                            textOfElement = String.valueOf(e.getElementsContainingOwnText(word).first());
+                        String textOfElement2 = null;
 
-                            textOfElement = Jsoup.parse(textOfElement).text();
-                        }
-                        System.out.println("Text of element is: " + textOfElement);
+
 
 
 
 
                         // if the word is not a stop word
                         if (!Objects.equals(wordAfterStemming, "")) {
+                            if(tag == "p"){
+                                textOfElement2 = String.valueOf(e.getElementsContainingOwnText(word));
+                                // get a paragraph of at least 10 words that contains the word
+                                textOfElement = Jsoup.parse(textOfElement2).text();
+
+
+
+                            }
+
+//                            System.out.println(word + " "+ wordAfterStemming + " Text of element is: " + textOfElement);
+
                             // check if the word property of the Word object is in the inverted file
                             if (invertedFile.get(wordAfterStemming) == null) { // word was not found in the inverted file
                                 HashMap<String, URL_DATA<Integer,Integer, String, String>> wordMap = new HashMap<String, URL_DATA<Integer,Integer, String, String>>();
                                 URL_DATA<Integer,Integer, String, String> urlMap = new URL_DATA<Integer,Integer, String, String>(1,priority, pageTitle, textOfElement);
-                                wordMap.put(fileUrlObject.get("link") + "", urlMap);
+                                wordMap.put(fileUrlObject.get("url") + "", urlMap);
                                 invertedFile.put(wordAfterStemming, wordMap);
                             } else { // word was found in the inverted file
-                                if (invertedFile.get(wordAfterStemming).containsKey(fileUrlObject.get("link") + "")) {
+                                if (invertedFile.get(wordAfterStemming).containsKey(fileUrlObject.get("url") + "")) {
                                     // same url
-                                    URL_DATA<Integer,Integer, String, String> urlMap = invertedFile.get(wordAfterStemming).get(fileUrlObject.get("link") + "");
+                                    URL_DATA<Integer,Integer, String, String> urlMap = invertedFile.get(wordAfterStemming).get(fileUrlObject.get("url") + "");
                                     urlMap.setTermFrequency(urlMap.getTermFrequency() + 1);
                                     urlMap.setPriority(urlMap.getPriority() + priority );
-                                    invertedFile.get(wordAfterStemming).put(fileUrlObject.get("link") + "", urlMap);
+                                    // check if the snippet in the word is null  then set the new snipet
+                                    if(urlMap.getSnippet() == null){
+                                        urlMap.setSnippet(textOfElement);
+                                    }
+                                    invertedFile.get(wordAfterStemming).put(fileUrlObject.get("url") + "", urlMap);
                                 } else {
                                     // different url
                                     URL_DATA<Integer,Integer, String, String> urlMap = new URL_DATA<Integer,Integer, String, String>(1,priority, pageTitle, textOfElement);
-                                    invertedFile.get(wordAfterStemming).put(fileUrlObject.get("link") + "", urlMap);
+                                    invertedFile.get(wordAfterStemming).put(fileUrlObject.get("url") + "", urlMap);
                                 }
                             }
                         }
@@ -133,10 +184,10 @@ public class Indexer {
             }
 
             // get the url frequency and add it to the url frequency hashmap
-            if (!URL_Frequency.containsKey(fileUrlObject.get("link") + "")) {
-                URL_Frequency.put(fileUrlObject.get("link") + "", new Pair<Integer, Integer>( 1, wordCountInDoc));
+            if (!URL_Frequency.containsKey(fileUrlObject.get("url") + "")) {
+                URL_Frequency.put(fileUrlObject.get("url") + "", new Pair<Integer, Integer>( 1, wordCountInDoc));
             } else {
-                URL_Frequency.put(fileUrlObject.get("link") + "", new Pair<Integer,Integer>(URL_Frequency.get(fileUrlObject.get("link") + "").getValue0() + 1, wordCountInDoc));
+                URL_Frequency.put(fileUrlObject.get("url") + "", new Pair<Integer,Integer>(URL_Frequency.get(fileUrlObject.get("url") + "").getValue0() + 1, wordCountInDoc));
             }
         }
     }
@@ -172,7 +223,7 @@ public class Indexer {
                 Double TFIDF = TF * IDF;
                 totTFIDF += TFIDF;
 
-                org.bson.Document ReferenceDocument = new org.bson.Document("link", URL);
+                org.bson.Document ReferenceDocument = new org.bson.Document("url", URL);
                 URL_DATA<Integer, Integer, String, String> OccurancesInfo = Occurances.get(URL);
                 ReferenceDocument.append("TF", OccurancesInfo.getTermFrequency());
                 ReferenceDocument.append("Priority", OccurancesInfo.getPriority());

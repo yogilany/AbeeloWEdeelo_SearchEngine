@@ -17,7 +17,7 @@ import java.util.ArrayList;
 @RestController
 public class SearchController {
 
-    @CrossOrigin(origins = "http://localhost:3001")
+    @CrossOrigin(origins = "http://localhost:3000")
     @GetMapping("/search")
     public QuerySearch.Result search(@RequestParam String search) throws IOException {
         System.out.println("Entered the endpoint");
