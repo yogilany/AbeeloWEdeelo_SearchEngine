@@ -31,7 +31,7 @@ public class Main {
 
     static {
         try {
-            outputfile = new FileWriter("C:\\Users\\Hp\\IdeaProjects\\crawler\\out.txt", true);
+            outputfile = new FileWriter("C:\\Users\\Hp\\IdeaProjects\\crawler\\out.txt", true); // dah link el seeds
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -46,7 +46,7 @@ public class Main {
         int number_of_threads = scanner.nextInt();
 
 
-        String path = "C:\\Users\\Hp\\IdeaProjects\\crawler\\out.txt";
+        String path = "C:\\Users\\Hp\\IdeaProjects\\crawler\\out.txt"; // dah link el seeds
         try (BufferedReader br2 = new BufferedReader(new FileReader(path))) {
             String line2;
             // Read the file line by line
